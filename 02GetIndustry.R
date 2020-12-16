@@ -22,7 +22,7 @@ symbol.list <- symbols[,1]
 startTime <- Sys.time()
 
 temp.df <- data.frame()
-for(i in 1153:length(symbol.list)){
+for(i in 1:length(symbol.list)){
 
 url <- paste0("https://finance.yahoo.com/quote/",symbol.list[i],"/profile?p=",symbol.list[i])
 theurl <- getURL(url,.opts = list(ssl.verifypeer = FALSE) )
@@ -51,8 +51,12 @@ if(i%%100==0) {
   }
   
 }
+nrow(temp.df)
+nrow(symbols)
+symbols_extra <- symbols%>%left_join(temp.df)
+nrow(symbols_extra)
 
-
+saveRDS(object = symbols_extra,file = 'Nasdaq/data/symbols_extra.RDS')
 # 
 # url <- "https://es.finance.yahoo.com/quote/AAPL/analysis?p=AAPL"
 # theurl <- getURL(url,.opts = list(ssl.verifypeer = FALSE) )
