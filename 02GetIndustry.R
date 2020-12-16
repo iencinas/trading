@@ -53,8 +53,11 @@ if(i%%100==0) {
 }
 nrow(temp.df)
 nrow(symbols)
+head(temp.df)
+head(symbols)
 symbols_extra <- symbols%>%left_join(temp.df)
 nrow(symbols_extra)
+head(symbols_extra)
 
 saveRDS(object = symbols_extra,file = 'Nasdaq/data/symbols_extra.RDS')
 # 
