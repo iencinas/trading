@@ -6,9 +6,6 @@ library(stringr)
 library(qdapRegex)
 
 
-library(rlist)
-library(lubridate)
-library(scales)
 
 rm(symbols)
 symbols <- readRDS(file = 'Nasdaq/data/symbols.RDS')
@@ -20,7 +17,7 @@ symbol.list <- symbols[,1]
 
 
 startTime <- Sys.time()
-
+i=1
 temp.df <- data.frame()
 for(i in 1:length(symbol.list)){
 
