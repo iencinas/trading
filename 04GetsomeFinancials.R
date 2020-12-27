@@ -9,7 +9,6 @@ library(httr)
 symbols <- readRDS(file = 'Nasdaq/data/symbols_extra_clean.RDS')
 head(symbols)
 
-read_html(curl('http://google.com', handle = curl::new_handle("useragent" = "Mozilla/5.0")))
 symbol.list <- symbols[,1]
 
 uastring <- c(
@@ -35,24 +34,26 @@ for(i in 1:length(symbol.list)){
   cat('.')
   symbol.text <- symbol.list[i]
   robust1 <- 'a'
+  status=100
   skip=0
-  while(robust1!='Var.1' & skip<5){
+  while((status!=200 || robust1!='Var.1') & skip<5){
     t0 <- Sys.time()
     url <- paste0("https://finance.yahoo.com/quote/",symbol.text,"/key-statistics?p=",symbol.text)
-    # session <- html_session(url, user_agent("Mozilla/5.0"))
-    # session <- html_session(url, user_agent(uastring[1]))
     session <- session%>%jump_to(url)
     t1 <- Sys.time()
     response_delay <- as.numeric(t1-t0)
-    table <- session%>%html_nodes("table" )%>%.[[1]]%>%html_table(fill=TRUE)
+    status=session$response$status_code
+    if(status==200){
+      table <- session%>%html_nodes("table" )%>%.[[1]]%>%html_table(fill=TRUE)
+      aux <- data.frame(table)  
+      robust1 <- colnames(aux)[1]  
+    }
     
-    aux <- data.frame(table)  
-    robust1 <- colnames(aux)[1]
     skip=skip+1
 
     if(robust1!='Var.1') {
       
-      Sys.sleep(sample(40, 1) * 0.1)
+      Sys.sleep(9+sample(20, 1) * 0.1)
       cat('-')
       if(skip > 3) session <- html_session("https://finance.yahoo.com/quote/", user_agent(uastring[
         sample(1:length(uastring),1)
@@ -63,7 +64,7 @@ for(i in 1:length(symbol.list)){
 
   if(skip==5) {
     cat('@')
-    Sys.sleep(sample(10, 1) )
+    Sys.sleep(sample(300:600, 1)*0.1 )
     session <- html_session("https://finance.yahoo.com/quote/", user_agent(uastring[
       sample(1:length(uastring),1)
     ]))
@@ -82,7 +83,7 @@ for(i in 1:length(symbol.list)){
     t2 <- Sys.time()
     waiting_delay <- as.numeric(t2-t1)
     final_delay=pmax(response_delay-waiting_delay,0)
-    Sys.sleep(2*final_delay)
+    Sys.sleep(10*final_delay)
     }
   
   
@@ -93,13 +94,26 @@ for(i in 1:length(symbol.list)){
     session <- html_session("https://finance.yahoo.com/quote/", user_agent(uastring[
       sample(1:length(uastring),1)
     ]))
+    if(i%%100==0) Sys.sleep(20)
+    if(i%%1000==0) Sys.sleep(60*5)
   }
 }
   
 temp.df.finc
 
-  
 tail(temp.df.finc)
+
+saveRDS(object = temp.df.finc,file = 'Nasdaq/data/temp.df.finc.RDS')
+head(temp.df.finc)
+
+head(temp.df.finc)
+aux <- temp.df.finc%>%group_by(Symbol)%>%slice_head(n = 1)
+head(aux)
+head(symbols)
+symbols <- symbols%>%left_join(aux)
+symbols%>%group_by(P_E=='N/A')%>%summarise(n())
+saveRDS(object = symbols,file = 'Nasdaq/data/symbol_e_c_e.RDS')
+
 # Get Ex-dividend
 # cat('.')
 # url <- paste0("https://finance.yahoo.com/quote/",symbol.text,"?p=",symbol.text)
